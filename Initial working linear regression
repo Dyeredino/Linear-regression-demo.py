@@ -1,0 +1,65 @@
+
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+
+def generate_data(n_samples=100, seed=42, noise_std=2.0):
+    np.random.seed(seed)
+    X = np.random.rand(n_samples, 1) * 10
+    true_w, true_b = 3, 5
+    noise = np.random.randn(n_samples, 1) * noise_std
+    y = true_w * X + true_b + noise
+    y = y.flatten()
+    return X, y
+
+
+def fit_and_evaluate(X, y):
+    model = LinearRegression()
+    model.fit(X, y)
+    preds = model.predict(X)
+    mse = mean_squared_error(y, preds)
+    return model, preds, mse
+
+
+def plot_data_and_fit(X, y, preds, out_path="generated_data_with_fit.png", show=False):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(X, y, alpha=0.6, label="Data")
+    # sort for a clean line plot
+    order = np.argsort(X[:, 0])
+    plt.plot(X[order, 0], preds[order], color="red", linewidth=2, label="Fitted line")
+    plt.xlabel("X")
+    plt.ylabel("y")
+    plt.title("Generated data with fitted line")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(out_path)
+    if show:
+        plt.show()
+    plt.close()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Runnable linear regression demo using scikit-learn")
+    parser.add_argument("--n-samples", type=int, default=100, help="Number of samples to generate")
+    parser.add_argument("--noise-std", type=float, default=2.0, help="Standard deviation of additive Gaussian noise")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--out", type=str, default="generated_data_with_fit.png", help="Output plot filename")
+    parser.add_argument("--show", action="store_true", help="Show the plot interactively (requires a display)")
+    args = parser.parse_args()
+
+    X, y = generate_data(n_samples=args.n_samples, seed=args.seed, noise_std=args.noise_std)
+    model, preds, mse = fit_and_evaluate(X, y)
+
+    print(f"Estimated coefficient (w): {model.coef_[0]:.6f}")
+    print(f"Estimated intercept (b): {model.intercept_:.6f}")
+    print(f"MSE: {mse:.6f}")
+
+    plot_data_and_fit(X, y, preds, out_path=args.out, show=args.show)
+    print(f"Saved plot to: {args.out}")
+
+
+if __name__ == "__main__":
+    main()
